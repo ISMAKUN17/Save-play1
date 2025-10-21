@@ -1,0 +1,186 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile information.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        }
+      }
+    },
+    "Goal": {
+      "title": "Saving Goal",
+      "description": "A financial savings goal for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this goal."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the saving goal."
+        },
+        "emoji": {
+          "type": "string",
+          "description": "An emoji representing the goal."
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount to be saved."
+        },
+        "savedAmount": {
+          "type": "number",
+          "description": "The amount already saved."
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The deadline for the goal."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "archived"],
+          "description": "The current status of the goal."
+        }
+      },
+      "required": ["userId", "name", "emoji", "totalAmount", "savedAmount", "deadline", "status"]
+    },
+    "Contribution": {
+      "title": "Contribution",
+      "description": "A single contribution towards a saving goal.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who made the contribution."
+        },
+        "goalId": {
+          "type": "string",
+          "description": "The ID of the goal this contribution is for."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the contribution."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the contribution."
+        }
+      },
+      "required": ["userId", "goalId", "amount", "date"]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "An income record for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this income record."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Salary", "Extra", "Gift", "Sale"],
+          "description": "The type of income."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The income amount in USD."
+        },
+        "originalAmount": {
+          "type": "number",
+          "description": "The original income amount in the specified currency."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["USD", "DOP"],
+          "description": "The currency of the original amount."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date the income was received."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description for the income."
+        }
+      },
+      "required": ["userId", "type", "amount", "originalAmount", "currency", "date"]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "A debt record for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this debt."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the debt."
+        },
+        "emoji": {
+          "type": "string",
+          "description": "An emoji representing the debt."
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount of the debt."
+        },
+        "paidAmount": {
+          "type": "number",
+          "description": "The amount already paid."
+        },
+        "monthlyPayment": {
+          "type": "number",
+          "description": "The required monthly payment."
+        },
+        "dueDate": {
+          "type": "number",
+          "description": "The day of the month the payment is due."
+        }
+      },
+      "required": ["userId", "name", "emoji", "totalAmount", "paidAmount", "monthlyPayment", "dueDate"]
+    },
+    "DebtPayment": {
+      "title": "Debt Payment",
+      "description": "A single payment towards a debt.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who made the payment."
+        },
+        "debtId": {
+          "type": "string",
+          "description": "The ID of the debt this payment is for."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the payment."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the payment."
+        }
+      },
+      "required": ["userId", "debtId", "amount", "date"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  }
+}
