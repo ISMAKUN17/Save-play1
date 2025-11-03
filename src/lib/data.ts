@@ -177,6 +177,29 @@ export async function addDebt(debt: Omit<Debt, 'id' | 'paidAmount' | 'userId'>):
   });
 }
 
+export async function updateDebt(debtId: string, debt: Omit<Debt, 'id' | 'paidAmount' | 'userId'>): Promise<void> {
+    const userId = getCurrentUserId();
+    const debtRef = ref(db, `debts/${userId}/${debtId}`);
+    await update(debtRef, debt);
+}
+
+export async function deleteDebt(debtId: string): Promise<void> {
+    const userId = getCurrentUserId();
+    // Also delete related payments
+    const paymentRef = ref(db, `debtPayments/${userId}`);
+    const q = query(paymentRef, orderByChild('debtId'), equalTo(debtId));
+    const paymentsSnap = await get(q);
+
+    const updates: Record<string, null> = {};
+    updates[`/debts/${userId}/${debtId}`] = null;
+    if (paymentsSnap.exists()) {
+        paymentsSnap.forEach((child) => {
+            updates[`/debtPayments/${userId}/${child.key}`] = null;
+        });
+    }
+    await update(ref(db), updates);
+}
+
 export async function addDebtPayment(debtId: string, amount: number): Promise<void> {
     const userId = getCurrentUserId();
     const debtRef = ref(db, `debts/${userId}/${debtId}`);
