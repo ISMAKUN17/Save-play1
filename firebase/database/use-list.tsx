@@ -5,7 +5,7 @@ import { ref, onValue, query, orderByChild } from 'firebase/database';
 import { useDatabase } from '../provider';
 
 // This hook listens to a list of data at a specific path
-export function useList<T>(path: string | null) {
+export function useList<T>(path: string | null, orderBy: string = 'date') {
   const db = useDatabase();
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,9 +22,7 @@ export function useList<T>(path: string | null) {
         return;
     };
 
-    // Check if the data type is likely to have a 'date' or 'createdAt' field for sorting
-    // This is a heuristic. For a more robust solution, you might pass the orderBy field as an arg.
-    const dataRef = query(ref(db, path), orderByChild('date'));
+    const dataRef = query(ref(db, path), orderByChild(orderBy));
 
     const unsubscribe = onValue(dataRef, (snapshot) => {
         const items: T[] = [];
@@ -34,8 +32,12 @@ export function useList<T>(path: string | null) {
             });
         }
         
-        // Firebase returns items sorted ascending by date, we want descending (most recent first)
-        setData(items.reverse());
+        // If ordering by date, we want descending (most recent first)
+        if (orderBy === 'date') {
+          setData(items.reverse());
+        } else {
+          setData(items);
+        }
         setLoading(false);
     }, (err) => {
         console.error(`Error fetching list at ${path}:`, err);
@@ -44,7 +46,7 @@ export function useList<T>(path: string | null) {
     });
 
     return () => unsubscribe();
-  }, [db, path]);
+  }, [db, path, orderBy]);
 
   return { data, loading, error };
 }

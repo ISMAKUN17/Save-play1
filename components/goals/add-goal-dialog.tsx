@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -55,6 +55,7 @@ interface AddGoalDialogProps {
 
 export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { currency, convertToUSD } = useCurrency();
 
@@ -83,6 +84,7 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
 
 
   const onSubmit = async (data: GoalFormValues) => {
+    setIsLoading(true);
     try {
       const amountInUSD = convertToUSD(data.totalAmount, data.currency);
       
@@ -105,6 +107,8 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
         title: 'Error al crear la meta',
         description: 'No se pudo crear la meta. Inténtalo de nuevo.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -199,8 +203,9 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="w-full neumorphic-raised">
-                Crear y Jugar
+              <Button type="submit" className="w-full neumorphic-raised" disabled={isLoading}>
+                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Creando...' : 'Crear y Jugar'}
               </Button>
             </DialogFooter>
           </form>

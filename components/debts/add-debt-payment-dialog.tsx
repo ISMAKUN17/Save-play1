@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Debt } from '@/lib/types';
-import { Receipt } from 'lucide-react';
+import { Loader2, Receipt } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -114,6 +114,7 @@ export function AddDebtPaymentDialog({ debt, onAddPayment }: AddDebtPaymentDialo
         </div>
         <DialogFooter>
           <Button onClick={handleAddPayment} disabled={isLoading} className="w-full neumorphic-raised">
+             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? 'Pagando...' : 'Confirmar Pago ✅'}
           </Button>
         </DialogFooter>

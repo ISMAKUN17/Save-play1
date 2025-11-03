@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Goal } from '@/lib/types';
-import { Plus } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -131,6 +131,7 @@ export function AddContributionDialog({ goal, onAddContribution }: AddContributi
         </div>
         <DialogFooter>
           <Button onClick={handleAddContribution} disabled={isLoading} className="w-full neumorphic-raised">
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? 'Aportando...' : 'Confirmar Aporte ✅'}
           </Button>
         </DialogFooter>

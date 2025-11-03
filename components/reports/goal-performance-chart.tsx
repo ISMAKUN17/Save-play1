@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
@@ -5,6 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { useGoals } from '@/hooks/use-goals';
 import { useMemo } from 'react';
 import { useCurrency } from '@/context/currency-context';
+import { subDays, startOfYear, parseISO, isAfter } from 'date-fns';
 
 const chartConfig = {
   total: {
@@ -22,10 +24,40 @@ export function GoalPerformanceChart({ timeRange }: { timeRange: string }) {
   const { formatCurrency } = useCurrency();
 
   const chartData = useMemo(() => {
-    // Filter active goals to show performance on ongoing efforts
+    const now = new Date();
+    let startDate: Date;
+
+    switch (timeRange) {
+      case 'last-30-days':
+        startDate = subDays(now, 30);
+        break;
+      case 'last-3-months':
+        startDate = subDays(now, 90);
+        break;
+      case 'this-year':
+        startDate = startOfYear(now);
+        break;
+      case 'all-time':
+      default:
+        startDate = new Date(0); // A very old date to include all goals
+        break;
+    }
+
     const activeGoals = goals.filter(g => g.status === 'active');
     
-    return activeGoals.slice(0, 5).map(goal => {
+    // The chart will show active goals created within the selected time range.
+    const filteredGoals = activeGoals.filter(goal => {
+      // Assuming goals have a `createdAt` field. If not, this won't filter.
+      // We will need to add createdAt to the Goal type and data logic.
+      // For now, let's assume it exists. If not, we should add it.
+      const createdAt = (goal as any).createdAt ? parseISO((goal as any).createdAt) : new Date(0);
+      return isAfter(createdAt, startDate);
+    });
+
+    // If no goals match the filter, show all active goals as a fallback
+    const goalsToShow = filteredGoals.length > 0 ? filteredGoals : activeGoals;
+
+    return goalsToShow.slice(0, 5).map(goal => {
       return {
         name: `${goal.emoji} ${goal.name}`,
         total: goal.totalAmount,

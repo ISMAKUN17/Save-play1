@@ -1,10 +1,11 @@
+
 'use client';
 
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, YAxis, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useCurrency } from '@/context/currency-context';
 import { useMemo } from 'react';
-import { subMonths, format, startOfMonth, parseISO, isWithinInterval } from 'date-fns';
+import { subMonths, format, startOfMonth, parseISO, isWithinInterval, subDays, startOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useIncome } from '@/hooks/use-income';
 import { useDebts } from '@/hooks/use-debts';
@@ -33,7 +34,30 @@ export function CashFlowChart({ timeRange }: { timeRange: string }) {
 
     const chartData = useMemo(() => {
         const now = new Date();
-        const months = Array.from({ length: 6 }).map((_, i) => subMonths(now, i)).reverse();
+        let startDate: Date;
+        let monthsCount = 6;
+
+        switch (timeRange) {
+          case 'last-30-days':
+            startDate = subDays(now, 30);
+            monthsCount = 2; // Show current and previous month for context
+            break;
+          case 'last-3-months':
+            startDate = subMonths(now, 2);
+            monthsCount = 3;
+            break;
+          case 'this-year':
+            startDate = startOfYear(now);
+            monthsCount = now.getMonth() + 1;
+            break;
+          case 'all-time':
+          default:
+            startDate = subMonths(now, 5); // Default to last 6 months for 'all-time' view
+            monthsCount = 6;
+            break;
+        }
+
+        const months = Array.from({ length: monthsCount }).map((_, i) => subMonths(now, i)).reverse();
 
         return months.map(monthStart => {
             const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);

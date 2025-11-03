@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Pie, PieChart, Cell } from 'recharts';
@@ -80,19 +81,24 @@ export function IncomeDistributionChart() {
             labelLine={false}
             label={({
               payload,
-              ...props
+              percent,
+              x,
+              y,
+              textAnchor,
+              dominantBaseline,
             }) => {
-              if (totalAmount === 0) return null;
-              const percent = (payload.amount / totalAmount) * 100;
-              if (percent < 5) return null; // Don't render label for small slices
+              if (totalAmount === 0 || !percent) return null;
+              const displayPercent = percent * 100;
+              if (displayPercent < 5) return null; // Don't render label for small slices
               return (
                  <text
-                  {...props}
+                  x={x}
+                  y={y}
                   className="fill-foreground text-sm"
-                  textAnchor={props.textAnchor}
-                  dominantBaseline="central"
+                  textAnchor={textAnchor}
+                  dominantBaseline={dominantBaseline}
                 >
-                  {`${percent.toFixed(0)}%`}
+                  {`${displayPercent.toFixed(0)}%`}
                 </text>
               )
             }}

@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,6 +50,7 @@ interface AddDebtDialogProps {
 
 export function AddDebtDialog({ debt, onSave, children }: AddDebtDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { currency, convertToUSD } = useCurrency();
   const isEditing = !!debt;
@@ -84,6 +85,7 @@ export function AddDebtDialog({ debt, onSave, children }: AddDebtDialogProps) {
 
 
   const onSubmit = async (data: DebtFormValues) => {
+    setIsLoading(true);
     try {
       const totalAmountInUSD = isEditing ? data.totalAmount : convertToUSD(data.totalAmount, data.currency);
       const monthlyPaymentInUSD = isEditing ? data.monthlyPayment : convertToUSD(data.monthlyPayment, data.currency);
@@ -107,6 +109,8 @@ export function AddDebtDialog({ debt, onSave, children }: AddDebtDialogProps) {
         title: 'Error al guardar la deuda',
         description: 'No se pudo guardar la deuda. Inténtalo de nuevo.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -220,8 +224,9 @@ export function AddDebtDialog({ debt, onSave, children }: AddDebtDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="w-full neumorphic-raised">
-                {isEditing ? 'Guardar Cambios' : 'Añadir Cadena'}
+              <Button type="submit" className="w-full neumorphic-raised" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Añadir Cadena'}
               </Button>
             </DialogFooter>
           </form>

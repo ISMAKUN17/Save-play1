@@ -234,7 +234,7 @@ export async function addIncomeCategory(category: Omit<Category, 'id' | 'userId'
   const newCatRef = push(catRef);
   await set(newCatRef, { ...category, userId });
 }
-export async function updateIncomeCategory(id: string, category: Omit<Category, 'id' | 'userId'>): Promise<void> {
+export async function updateIncomeCategory(id: string, category: Partial<Omit<Category, 'id' | 'userId'>>): Promise<void> {
   const userId = getCurrentUserId();
   await update(ref(db, `incomeCategories/${userId}/${id}`), category);
 }
@@ -249,7 +249,7 @@ export async function addExpenseCategory(category: Omit<Category, 'id' | 'userId
   const newCatRef = push(catRef);
   await set(newCatRef, { ...category, userId });
 }
-export async function updateExpenseCategory(id: string, category: Omit<Category, 'id' | 'userId'>): Promise<void> {
+export async function updateExpenseCategory(id: string, category: Partial<Omit<Category, 'id' | 'userId'>>): Promise<void> {
   const userId = getCurrentUserId();
   await update(ref(db, `expenseCategories/${userId}/${id}`), category);
 }

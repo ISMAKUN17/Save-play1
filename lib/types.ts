@@ -67,4 +67,5 @@ export type Category = {
     userId: string;
     name: string;
     emoji: string;
+    order: number;
 };

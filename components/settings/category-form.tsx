@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit } from 'lucide-react';
+import { PlusCircle, Edit, Loader2 } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -36,13 +36,14 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 
 interface CategoryFormDialogProps {
   category?: Category | null;
-  onSave: (category: Omit<Category, 'id' | 'userId'>, id?: string) => Promise<void>;
+  onSave: (category: Omit<Category, 'id' | 'userId' | 'order'>, id?: string) => Promise<void>;
   children?: React.ReactNode;
   categoryType: 'income' | 'expense';
 }
 
 export function CategoryFormDialog({ category, onSave, children, categoryType }: CategoryFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isEditing = !!category;
 
@@ -60,6 +61,7 @@ export function CategoryFormDialog({ category, onSave, children, categoryType }:
   }, [open, category, form]);
 
   const onSubmit = async (data: CategoryFormValues) => {
+    setIsLoading(true);
     try {
       await onSave({
         name: data.name,
@@ -77,6 +79,8 @@ export function CategoryFormDialog({ category, onSave, children, categoryType }:
         title: isEditing ? 'Error al actualizar' : 'Error al crear',
         description: 'No se pudo guardar la categoría. Inténtalo de nuevo.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -132,8 +136,9 @@ export function CategoryFormDialog({ category, onSave, children, categoryType }:
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="w-full neumorphic-raised">
-                {isEditing ? 'Guardar Cambios' : 'Crear Categoría'}
+              <Button type="submit" className="w-full neumorphic-raised" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Crear Categoría'}
               </Button>
             </DialogFooter>
           </form>

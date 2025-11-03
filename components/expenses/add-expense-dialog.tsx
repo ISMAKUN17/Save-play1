@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { TrendingDown } from 'lucide-react';
+import { Loader2, TrendingDown } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -79,6 +79,7 @@ interface AddExpenseDialogProps {
 
 export function AddExpenseDialog({ expense, onSave, children }: AddExpenseDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { currency, convertToUSD } = useCurrency();
   const { expenseCategories, isLoading: isLoadingCategories } = useCategories();
@@ -97,6 +98,7 @@ export function AddExpenseDialog({ expense, onSave, children }: AddExpenseDialog
 
 
   const onSubmit = async (data: ExpenseFormValues) => {
+    setIsLoading(true);
     try {
       const amountInUSD = convertToUSD(data.amount, data.currency);
       
@@ -120,6 +122,8 @@ export function AddExpenseDialog({ expense, onSave, children }: AddExpenseDialog
         title: isEditing ? 'Error al actualizar' : 'Error al registrar',
         description: 'No se pudo guardar el gasto. Inténtalo de nuevo.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -235,8 +239,9 @@ export function AddExpenseDialog({ expense, onSave, children }: AddExpenseDialog
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="w-full neumorphic-raised">
-                {isEditing ? 'Guardar Cambios' : 'Registrar Gasto'}
+              <Button type="submit" className="w-full neumorphic-raised" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Registrar Gasto'}
               </Button>
             </DialogFooter>
           </form>

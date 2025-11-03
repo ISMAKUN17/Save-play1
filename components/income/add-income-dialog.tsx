@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -77,6 +77,7 @@ interface AddIncomeDialogProps {
 
 export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { currency, convertToUSD } = useCurrency();
   const { incomeCategories, isLoading: isLoadingCategories } = useCategories();
@@ -95,6 +96,7 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
 
 
   const onSubmit = async (data: IncomeFormValues) => {
+    setIsLoading(true);
     try {
       const amountInUSD = convertToUSD(data.amount, data.currency);
       
@@ -118,6 +120,8 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
         title: isEditing ? 'Error al actualizar' : 'Error al registrar',
         description: 'No se pudo guardar el ingreso. Inténtalo de nuevo.',
       });
+    } finally {
+        setIsLoading(false);
     }
   };
   
@@ -233,8 +237,9 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="w-full neumorphic-raised">
-                 {isEditing ? 'Guardar Cambios' : 'Registrar Ingreso'}
+              <Button type="submit" className="w-full neumorphic-raised" disabled={isLoading}>
+                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 {isLoading ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Registrar Ingreso'}
               </Button>
             </DialogFooter>
           </form>
