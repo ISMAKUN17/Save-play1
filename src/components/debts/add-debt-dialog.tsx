@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,18 +29,13 @@ const debtSchema = z.object({
     (a) => parseFloat(z.string().parse(a)),
     z.number().positive({ message: "El monto total debe ser mayor a cero." })
   ),
-  paymentAmount: z.preprocess(
+  monthlyPayment: z.preprocess(
     (a) => parseFloat(z.string().parse(a)),
-    z.number().positive({ message: "El pago debe ser mayor a cero." })
+    z.number().positive({ message: "El pago mensual debe ser mayor a cero." })
   ),
-  paymentFrequency: z.enum(['Mensual', 'Quincenal', 'Semanal', 'Bimestral', 'Trimestral']),
   dueDate: z.preprocess(
     (a) => parseInt(z.string().parse(a), 10),
     z.number().min(1).max(31, { message: "Debe ser un día válido del mes (1-31)." })
-  ),
-  dueDate2: z.preprocess(
-    (a) => a ? parseInt(z.string().parse(a), 10) : undefined,
-    z.number().min(1).max(31, { message: "Debe ser un día válido del mes (1-31)." }).optional().nullable()
   ),
   currency: z.enum(['USD', 'DOP']),
 });
@@ -48,88 +43,92 @@ const debtSchema = z.object({
 type DebtFormValues = z.infer<typeof debtSchema>;
 
 interface AddDebtDialogProps {
-  onAddDebt: (debt: Omit<Debt, 'id' | 'paidAmount'>) => Promise<void>;
+  debt?: Debt | null;
+  onSave: (debt: Omit<Debt, 'id' | 'paidAmount' | 'userId'>, id?: string) => Promise<void>;
+  children?: React.ReactNode;
 }
 
-export function AddDebtDialog({ onAddDebt }: AddDebtDialogProps) {
+export function AddDebtDialog({ debt, onSave, children }: AddDebtDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { currency, convertToUSD } = useCurrency();
+  const isEditing = !!debt;
 
   const form = useForm<DebtFormValues>({
     resolver: zodResolver(debtSchema),
-    defaultValues: {
-      name: '',
-      emoji: '',
-      totalAmount: 0,
-      paymentAmount: 0,
-      paymentFrequency: 'Mensual',
-      dueDate: 1,
-      dueDate2: null,
-      currency: currency,
-    },
   });
 
-  const paymentFrequency = form.watch('paymentFrequency');
-
-  React.useEffect(() => {
-    if (!form.formState.isDirty) {
-      form.reset({
-        name: '',
-        emoji: '',
-        totalAmount: 0,
-        paymentAmount: 0,
-        paymentFrequency: 'Mensual',
-        dueDate: 1,
-        dueDate2: null,
-        currency: currency,
-      });
+  useEffect(() => {
+    if (open) {
+      if (isEditing && debt) {
+         form.reset({
+          name: debt.name,
+          emoji: debt.emoji,
+          totalAmount: debt.totalAmount as unknown as number,
+          monthlyPayment: debt.monthlyPayment as unknown as number,
+          dueDate: debt.dueDate,
+          currency: 'USD', // amounts in edit mode are already in USD
+        });
+      } else {
+        form.reset({
+          name: '',
+          emoji: '',
+          totalAmount: 0,
+          monthlyPayment: 0,
+          dueDate: 1,
+          currency: currency,
+        });
+      }
     }
-  }, [currency, form]);
+  }, [open, debt, isEditing, currency, form]);
+
 
   const onSubmit = async (data: DebtFormValues) => {
     try {
-      const totalAmountInUSD = convertToUSD(data.totalAmount, data.currency);
-      const paymentAmountInUSD = convertToUSD(data.paymentAmount, data.currency);
+      const totalAmountInUSD = isEditing ? data.totalAmount : convertToUSD(data.totalAmount, data.currency);
+      const monthlyPaymentInUSD = isEditing ? data.monthlyPayment : convertToUSD(data.monthlyPayment, data.currency);
       
-      await onAddDebt({
+      await onSave({
         name: data.name,
         emoji: data.emoji,
         totalAmount: totalAmountInUSD,
-        paymentAmount: paymentAmountInUSD,
-        paymentFrequency: data.paymentFrequency,
+        monthlyPayment: monthlyPaymentInUSD,
         dueDate: data.dueDate,
-        dueDate2: data.dueDate2,
-      });
+      }, debt?.id);
 
       toast({
-        title: '¡Deuda Registrada! ⛓️',
-        description: `Tu nueva deuda "${data.name}" ha sido registrada.`
+        title: isEditing ? '¡Deuda Actualizada! ⛓️' : '¡Deuda Registrada! ⛓️',
+        description: `Tu deuda "${data.name}" ha sido ${isEditing ? 'actualizada' : 'registrada'}.`,
       });
       setOpen(false);
-      form.reset();
     } catch (error) {
        toast({
         variant: 'destructive',
-        title: 'Error al registrar la deuda',
-        description: 'No se pudo crear la deuda. Inténtalo de nuevo.',
+        title: 'Error al guardar la deuda',
+        description: 'No se pudo guardar la deuda. Inténtalo de nuevo.',
       });
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+  
+  const trigger = children ? (
+    <DialogTrigger asChild>{children}</DialogTrigger>
+  ) : (
+     <DialogTrigger asChild>
         <Button className="neumorphic-raised">
           <PlusCircle className="mr-2 h-4 w-4" />
           Registrar Deuda
         </Button>
       </DialogTrigger>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {trigger}
       <DialogContent className="sm:max-w-[425px] glassmorphic">
         <DialogHeader>
-          <DialogTitle>Registrar Nueva "Cadena" ⛓️</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar "Cadena"' : 'Registrar Nueva "Cadena"'} ⛓️</DialogTitle>
           <DialogDescription>
-            Añade una deuda para empezar a romper tus cadenas financieras.
+            {isEditing ? 'Modifica los detalles de tu deuda.' : 'Añade una deuda para empezar a romper tus cadenas financieras.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -179,7 +178,7 @@ export function AddDebtDialog({ onAddDebt }: AddDebtDialogProps) {
                 name="currency"
                 render={({ field }) => (
                   <FormItem className="self-end">
-                     <Select onValueChange={field.onChange} value={field.value}>
+                     <Select onValueChange={field.onChange} value={field.value} disabled={isEditing}>
                         <FormControl>
                           <SelectTrigger className="neumorphic-inset">
                             <SelectValue placeholder="Moneda" />
@@ -196,10 +195,10 @@ export function AddDebtDialog({ onAddDebt }: AddDebtDialogProps) {
             </div>
             <FormField
               control={form.control}
-              name="paymentAmount"
+              name="monthlyPayment"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Monto del Pago</FormLabel>
+                  <FormLabel>Pago Mensual</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="Ej: 10000" {...field} onFocus={(e) => e.target.select()} className="neumorphic-inset" />
                   </FormControl>
@@ -209,61 +208,20 @@ export function AddDebtDialog({ onAddDebt }: AddDebtDialogProps) {
             />
             <FormField
               control={form.control}
-              name="paymentFrequency"
+              name="dueDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Frecuencia de Pago 📅</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="neumorphic-inset">
-                        <SelectValue placeholder="Selecciona la frecuencia" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Mensual">Mensual</SelectItem>
-                      <SelectItem value="Quincenal">Quincenal</SelectItem>
-                      <SelectItem value="Semanal">Semanal</SelectItem>
-                      <SelectItem value="Bimestral">Bimestral</SelectItem>
-                      <SelectItem value="Trimestral">Trimestral</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Día de Vencimiento Mensual</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="Ej: 15" {...field} className="neumorphic-inset" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Día de Vencimiento</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="Ej: 15" {...field} className="neumorphic-inset" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {paymentFrequency === 'Quincenal' && (
-                <FormField
-                  control={form.control}
-                  name="dueDate2"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Segundo Vencimiento</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="Ej: 30" {...field} value={field.value ?? ''} className="neumorphic-inset" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
             <DialogFooter>
               <Button type="submit" className="w-full neumorphic-raised">
-                Añadir Cadena
+                {isEditing ? 'Guardar Cambios' : 'Añadir Cadena'}
               </Button>
             </DialogFooter>
           </form>
