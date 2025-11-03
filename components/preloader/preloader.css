@@ -1,0 +1,111 @@
+:root {
+  --preloader-bg: hsl(172 100% 97%);
+  --rocket-trail: hsl(39 100% 50% / 0.6);
+  --progress-fill: hsl(39 100% 50%);
+}
+
+.dark {
+  --preloader-bg: hsl(240 10% 3.9%);
+  --rocket-trail: hsl(262 84% 60% / 0.6);
+  --progress-fill: hsl(262 84% 60%);
+}
+
+.preloader-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--preloader-bg);
+  z-index: 9999;
+  transition: opacity 0.5s ease-out;
+}
+
+.preloader-container.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.preloader-content {
+  width: 90%;
+  max-width: 350px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 1.5rem; /* Increased border-radius */
+}
+
+.rocket-container {
+  width: 100px;
+  height: 200px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.rocket-emoji {
+  position: absolute;
+  font-size: 4rem;
+  will-change: transform, bottom;
+  transition: bottom 0.3s ease-out, transform 0.3s ease-out;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.flames {
+  width: 20px;
+  height: 50px;
+  background: linear-gradient(to top, var(--rocket-trail), transparent);
+  border-radius: 50% 50% 0 0;
+  position: absolute;
+  bottom: -30px;
+  transform-origin: bottom;
+  transition: opacity 0.3s, transform 0.3s;
+  animation: flicker 0.1s infinite alternate;
+}
+
+@keyframes flicker {
+  from {
+    transform: scaleY(0.95) scaleX(0.9);
+  }
+  to {
+    transform: scaleY(1) scaleX(1.1);
+  }
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--progress-fill);
+  border-radius: 6px;
+  transition: width 0.3s ease-out;
+}
+
+.message-container {
+  text-align: center;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.message-emoji {
+  font-size: 1.2rem;
+  animation: pop-in 0.5s ease-out forwards;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}

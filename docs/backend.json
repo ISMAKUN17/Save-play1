@@ -90,8 +90,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["Salary", "Extra", "Gift", "Sale"],
-          "description": "The type of income."
+          "description": "The type of income (references an income category name)."
         },
         "amount": {
           "type": "number",
@@ -117,6 +116,55 @@
         }
       },
       "required": ["userId", "type", "amount", "originalAmount", "currency", "date"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "An expense record for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this expense record."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of expense (references an expense category name)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The expense amount in USD."
+        },
+        "originalAmount": {
+          "type": "number",
+          "description": "The original expense amount in the specified currency."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["USD", "DOP"],
+          "description": "The currency of the original amount."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date the expense was made."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional description for the expense."
+        }
+      },
+      "required": ["userId", "type", "amount", "originalAmount", "currency", "date"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "A user-defined category for income or expenses.",
+      "type": "object",
+      "properties": {
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "emoji": { "type": "string" }
+      },
+      "required": ["userId", "name"]
     },
     "Debt": {
       "title": "Debt",
@@ -182,5 +230,61 @@
   },
   "auth": {
     "providers": ["anonymous"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public profiles for users."
+    },
+    "/goals/{goalId}": {
+      "schema": {
+        "$ref": "#/entities/Goal"
+      },
+      "description": "Stores all saving goals created by users."
+    },
+    "/goals/{goalId}/contributions/{contributionId}": {
+      "schema": {
+        "$ref": "#/entities/Contribution"
+      },
+      "description": "Sub-collection for contributions to a specific goal."
+    },
+    "/incomes/{incomeId}": {
+      "schema": {
+        "$ref": "#/entities/Income"
+      },
+      "description": "Stores all income records for all users."
+    },
+     "/expenses/{expenseId}": {
+      "schema": {
+        "$ref": "#/entities/Expense"
+      },
+      "description": "Stores all expense records for all users."
+    },
+    "/debts/{debtId}": {
+      "schema": {
+        "$ref": "#/entities/Debt"
+      },
+      "description": "Stores all debt records for all users."
+    },
+    "/debts/{debtId}/payments/{paymentId}": {
+      "schema": {
+        "$ref": "#/entities/DebtPayment"
+      },
+      "description": "Sub-collection for payments towards a specific debt."
+    },
+    "/incomeCategories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Stores user-defined categories for income."
+    },
+    "/expenseCategories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Stores user-defined categories for expenses."
+    }
   }
 }
