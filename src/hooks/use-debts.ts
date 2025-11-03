@@ -14,10 +14,19 @@ export function useDebts() {
 
   const isLoading = debtsLoading || paymentsLoading;
   
-  const addDebt = async (debt: Omit<Debt, 'id' | 'paidAmount' | 'userId'>) => {
+  const handleSave = async (debt: Omit<Debt, 'id' | 'paidAmount' | 'userId'>, id?: string) => {
     if (!user?.uid) throw new Error("User not authenticated");
-    await data.addDebt(debt);
+    if (id) {
+      await data.updateDebt(id, debt);
+    } else {
+      await data.addDebt(debt);
+    }
   };
+
+  const deleteDebt = async (debtId: string) => {
+    if (!user?.uid) throw new Error("User not authenticated");
+    await data.deleteDebt(debtId);
+  }
 
   const addDebtPayment = async (debtId: string, amount: number) => {
      if (!user?.uid) throw new Error("User not authenticated");
@@ -27,7 +36,9 @@ export function useDebts() {
   return {
     debts,
     debtPayments,
-    addDebt,
+    addDebt: handleSave,
+    updateDebt: handleSave,
+    deleteDebt,
     addDebtPayment,
     isLoading,
   };

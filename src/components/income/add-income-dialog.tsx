@@ -44,7 +44,7 @@ const incomeSchema = z.object({
     z.number().positive({ message: "El monto debe ser mayor a cero." })
   ),
   currency: z.enum(['USD', 'DOP']),
-  date: z.string().min(1, { message: "La fecha es requerida." }),
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "La fecha no es válida." }),
   description: z.string().optional(),
 });
 
@@ -97,15 +97,13 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
   const onSubmit = async (data: IncomeFormValues) => {
     try {
       const amountInUSD = convertToUSD(data.amount, data.currency);
-      const [year, month, day] = data.date.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
       
       await onSave({
         type: data.type,
         amount: amountInUSD,
         originalAmount: data.amount,
         currency: data.currency,
-        date: date.toISOString(),
+        date: new Date(data.date).toISOString(),
         description: data.description,
       }, income?.id);
 
@@ -145,7 +143,7 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form id="income-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4" />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
              <FormField
                 control={form.control}
                 name="type"
@@ -182,7 +180,7 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
                   <FormItem className="col-span-2">
                     <FormLabel>Monto</FormLabel>
                     <FormControl>
-                      <Input form="income-form" type="number" placeholder="Ej: 50000" {...field} onFocus={(e) => e.target.select()} className="neumorphic-inset" />
+                      <Input type="number" placeholder="Ej: 50000" {...field} onFocus={(e) => e.target.select()} className="neumorphic-inset" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,7 +213,7 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
                 <FormItem>
                   <FormLabel>Fecha</FormLabel>
                   <FormControl>
-                    <Input form="income-form" type="date" {...field} className="neumorphic-inset" />
+                    <Input type="date" {...field} className="neumorphic-inset" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -228,17 +226,18 @@ export function AddIncomeDialog({ income, onSave, children }: AddIncomeDialogPro
                 <FormItem>
                   <FormLabel>Descripción (Opcional)</FormLabel>
                   <FormControl>
-                    <Textarea form="income-form" placeholder="Ej: Pago de freelance" {...field} className="neumorphic-inset" />
+                    <Textarea placeholder="Ej: Pago de freelance" {...field} className="neumorphic-inset" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button form="income-form" type="submit" className="w-full neumorphic-raised">
+              <Button type="submit" className="w-full neumorphic-raised">
                  {isEditing ? 'Guardar Cambios' : 'Registrar Ingreso'}
               </Button>
             </DialogFooter>
+          </form>
         </Form>
       </DialogContent>
     </Dialog>
